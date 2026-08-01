@@ -85,16 +85,16 @@ $ProgressPreference    = 'Continue'
 # Configuration
 # ---------------------------------------------------------------------------
 # Script source (this repo) - for one-line install command
-$ScriptRepo     = 'SmallRob/millennium-steam-patcher'
+$script:ScriptRepo     = 'SmallRob/millennium-steam-patcher'
 
 # Release source (original repo) - for downloading releases
-$ReleaseAccount = 'SteamClientHomebrew'
-$ReleaseRepo    = "$ReleaseAccount/Millennium"
-$ReleasesApiUri = "https://api.github.com/repos/$ReleaseRepo/releases"
-$DownloadBase   = "https://github.com/$ReleaseRepo/releases/download"
-$NightlyBase    = "https://nightly.link/$ReleaseRepo/actions/runs"
-$UserAgent      = 'millennium-windows-installer/1.0 (+powershell)'
-$TempRoot       = Join-Path $env:TEMP 'millennium-install'
+$script:ReleaseAccount = 'SteamClientHomebrew'
+$script:ReleaseRepo    = "$($script:ReleaseAccount)/Millennium"
+$script:ReleasesApiUri = "https://api.github.com/repos/$($script:ReleaseRepo)/releases"
+$script:DownloadBase   = "https://github.com/$($script:ReleaseRepo)/releases/download"
+$script:NightlyBase    = "https://nightly.link/$($script:ReleaseRepo)/actions/runs"
+$script:UserAgent      = 'millennium-windows-installer/1.0 (+powershell)'
+$script:TempRoot       = Join-Path $env:TEMP 'millennium-install'
 
 # ---------------------------------------------------------------------------
 # UI helpers
@@ -202,13 +202,13 @@ function Get-LatestRelease {
 
     Write-Info "Querying GitHub for the latest $(if ($AllowPrerelease) { 'pre-release' } else { 'stable' }) release..."
 
-    $headers = @{ 'User-Agent' = $UserAgent; 'Accept' = 'application/vnd.github+json' }
+    $headers = @{ 'User-Agent' = $script:UserAgent; 'Accept' = 'application/vnd.github+json' }
     $page = 1
     $tag = $null
     $size = 0
 
     while ($page -le 5) {
-        $uri = "$ReleasesApiUri?per_page=100&page=$page"
+        $uri = "$($script:ReleasesApiUri)?per_page=100&page=$page"
         $releases = Invoke-RestMethod -Uri $uri -Headers $headers -TimeoutSec 30
 
         if (-not $releases -or $releases.Count -eq 0) { break }
@@ -242,8 +242,8 @@ function Invoke-FileDownload {
     # Use HttpClient to avoid the awful progress bar of Invoke-WebRequest while
     # still streaming the file to disk in chunks.
     $request = [System.Net.HttpWebRequest]::Create($Uri)
-    $request.UserAgent = $UserAgent
-    $request.Timeout   = 60_000
+    $request.UserAgent = $script:UserAgent
+    $request.Timeout   = 60000
     $request.AllowAutoRedirect = $true
 
     $response = $request.GetResponse()
@@ -283,9 +283,9 @@ function Get-Sha256OfFile ([string]$Path) {
 }
 
 function Get-ExpectedSha256 ([string]$Tag) {
-    $uri = "$DownloadBase/v$Tag/millennium-v$Tag-windows-x86_64.sha256"
+    $uri = "$($script:DownloadBase)/v$Tag/millennium-v$Tag-windows-x86_64.sha256"
     try {
-        $body = (Invoke-WebRequest -Uri $uri -UseBasicParsing -Headers @{ 'User-Agent' = $UserAgent } -TimeoutSec 30).Content.Trim()
+        $body = (Invoke-WebRequest -Uri $uri -UseBasicParsing -Headers @{ 'User-Agent' = $script:UserAgent } -TimeoutSec 30).Content.Trim()
     } catch {
         return $null
     }
@@ -298,7 +298,7 @@ function Get-ExpectedSha256 ([string]$Tag) {
 # Install / uninstall
 # ---------------------------------------------------------------------------
 function Backup-ExistingFiles ([string]$SteamDir) {
-    $backupDir = Join-Path $TempRoot 'backup'
+    $backupDir = Join-Path $script:TempRoot 'backup'
     if (Test-Path -LiteralPath $backupDir) { Remove-Item -LiteralPath $backupDir -Recurse -Force }
     New-Item -ItemType Directory -Path $backupDir -Force | Out-Null
 
@@ -367,7 +367,7 @@ function Uninstall-Millennium {
     }
 
     if (Test-Path -LiteralPath $wsock) {
-        $backup = Join-Path $TempRoot 'backup\wsock32.dll'
+        $backup = Join-Path $script:TempRoot 'backup\wsock32.dll'
         if (Test-Path -LiteralPath $backup) {
             Move-Item -LiteralPath $backup -Destination $wsock -Force
             Write-Ok "Restored original $wsock from backup."
@@ -402,14 +402,14 @@ function Install-Millennium {
     if ($RunIdOverride) {
         $tag = "run-$RunIdOverride"
         $zipName = 'millennium-windows.zip'
-        $zipUri  = "$NightlyBase/$RunIdOverride/$zipName"
+        $zipUri  = "$($script:NightlyBase)/$RunIdOverride/$zipName"
         $expectedSha = $null
         $expectedSize = 0
     } else {
         $rel = Get-LatestRelease -AllowPrerelease:$AllowPrerelease
         $tag = $rel.Tag
         $zipName = "millennium-v$tag-windows-x86_64.zip"
-        $zipUri  = "$DownloadBase/v$tag/$zipName"
+        $zipUri  = "$($script:DownloadBase)/v$tag/$zipName"
         $expectedSha = Get-ExpectedSha256 -Tag $tag
         $expectedSize = $rel.Size
     }
@@ -447,10 +447,10 @@ function Install-Millennium {
     # ------------------------------------------------------------------
     # Download + verify
     # ------------------------------------------------------------------
-    if (Test-Path -LiteralPath $TempRoot) { Remove-Item -LiteralPath $TempRoot -Recurse -Force }
-    New-Item -ItemType Directory -Path $TempRoot -Force | Out-Null
+    if (Test-Path -LiteralPath $script:TempRoot) { Remove-Item -LiteralPath $script:TempRoot -Recurse -Force }
+    New-Item -ItemType Directory -Path $script:TempRoot -Force | Out-Null
 
-    $zipPath = Join-Path $TempRoot $zipName
+    $zipPath = Join-Path $script:TempRoot $zipName
     Write-Step 2 4 "Downloading Millennium v$tag..."
     Invoke-FileDownload -Uri $zipUri -OutFile $zipPath
 
@@ -469,7 +469,7 @@ function Install-Millennium {
     # Extract + install
     # ------------------------------------------------------------------
     Write-Step 4 4 'Extracting and installing...'
-    $extractDir = Join-Path $TempRoot 'files'
+    $extractDir = Join-Path $script:TempRoot 'files'
     New-Item -ItemType Directory -Path $extractDir -Force | Out-Null
 
     # Use [System.IO.Compression.ZipFile] so we don't depend on tar/external tools.
@@ -480,7 +480,7 @@ function Install-Millennium {
     Copy-MillenniumToSteam -ExtractedRoot $extractDir -SteamDir $SteamDir
 
     # Best-effort cleanup of the temp dir (don't fail the install on error).
-    try { Remove-Item -LiteralPath $TempRoot -Recurse -Force } catch { }
+    try { Remove-Item -LiteralPath $script:TempRoot -Recurse -Force } catch { }
 
     Write-Host ''
     Write-Ok "Millennium v$tag installed."
