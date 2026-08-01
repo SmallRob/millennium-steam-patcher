@@ -20,7 +20,7 @@
 
     Can be run locally (.\install.ps1) or piped from the web:
 
-        iwr -useb https://raw.githubusercontent.com/SteamClientHomebrew/Millennium/main/scripts/install.ps1 | iex
+        iwr -useb https://raw.githubusercontent.com/SmallRob/millennium-steam-patcher/main/scripts/install.ps1 | iex
 
 .PARAMETER Beta
     Install the latest pre-release instead of the latest stable release.
@@ -55,7 +55,7 @@
     Removes Millennium from the Steam install directory.
 
 .EXAMPLE
-    PS> iwr -useb https://raw.githubusercontent.com/SteamClientHomebrew/Millennium/main/scripts/install.ps1 | iex
+    PS> iwr -useb https://raw.githubusercontent.com/SmallRob/millennium-steam-patcher/main/scripts/install.ps1 | iex
     One-line install from the web (PowerShell 5.1+).
 
 .NOTES
@@ -84,8 +84,8 @@ $ProgressPreference    = 'Continue'
 # ---------------------------------------------------------------------------
 # Configuration
 # ---------------------------------------------------------------------------
-$GitHubAccount  = 'SteamClientHomebrew'
-$GitHubRepo     = "$GitHubAccount/Millennium"
+$GitHubAccount  = 'SmallRob'
+$GitHubRepo     = "$GitHubAccount/millennium-steam-patcher"
 $ReleasesApiUri = "https://api.github.com/repos/$GitHubRepo/releases"
 $DownloadBase   = "https://github.com/$GitHubRepo/releases/download"
 $NightlyBase    = "https://nightly.link/$GitHubRepo/actions/runs"
