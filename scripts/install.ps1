@@ -84,11 +84,15 @@ $ProgressPreference    = 'Continue'
 # ---------------------------------------------------------------------------
 # Configuration
 # ---------------------------------------------------------------------------
-$GitHubAccount  = 'SmallRob'
-$GitHubRepo     = "$GitHubAccount/millennium-steam-patcher"
-$ReleasesApiUri = "https://api.github.com/repos/$GitHubRepo/releases"
-$DownloadBase   = "https://github.com/$GitHubRepo/releases/download"
-$NightlyBase    = "https://nightly.link/$GitHubRepo/actions/runs"
+# Script source (this repo) - for one-line install command
+$ScriptRepo     = 'SmallRob/millennium-steam-patcher'
+
+# Release source (original repo) - for downloading releases
+$ReleaseAccount = 'SteamClientHomebrew'
+$ReleaseRepo    = "$ReleaseAccount/Millennium"
+$ReleasesApiUri = "https://api.github.com/repos/$ReleaseRepo/releases"
+$DownloadBase   = "https://github.com/$ReleaseRepo/releases/download"
+$NightlyBase    = "https://nightly.link/$ReleaseRepo/actions/runs"
 $UserAgent      = 'millennium-windows-installer/1.0 (+powershell)'
 $TempRoot       = Join-Path $env:TEMP 'millennium-install'
 
